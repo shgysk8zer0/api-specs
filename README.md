@@ -4,6 +4,7 @@ Specifications for the microdata API (unnamed)
 ## Index
 - [Contributing](./docs/CONTRIBUTING.md)
 - [Relevant Resources](#relevant-resources)
+- [Request structure](#request-structure)
 - [Examples](#examples)
 - [Advanced Examples](#advanced-example)
 
@@ -13,6 +14,24 @@ Specifications for the microdata API (unnamed)
 ## Relevant Resources
 - [Schema.org](https://schema.org)
 - [`<template>`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/template)
+- [Full vocabulary list](https://schema.org/docs/full.html)
+
+## Request Structure
+Uses typical REST methods with endpoints mirroring vocabulary and schema defined
+on [schema.org](https://schema.org/docs/full.html)
+
+- `GET /Person/dc67d265e8b544b62f8fea85083fde45` Get an individual entry
+- **CONSIDERING** `GET /Person/Chris%20Zuber` Get an entry by name (*might not be unique*)
+- `GET /Person/dc67d265e8b544b62f8fea85083fde45?fields=givenName,familyName`
+Restrict response data
+- `GET /Person/?lastName=Smith&limit=15&offset=16` Get a list of 15 entries with the last
+name, "Smith", starting with the 16th entry (for pagination)
+- `POST /Person/` Create a new entry. Responds with hash id
+(requires form data or JSON)
+- `PUT /Person/dc67d265e8b544b62f8fea85083fde45` Update an entry
+(requires form data or JSON)
+- `DELETE /Person/dc67d265e8b544b62f8fea85083fde45` Delete an entry
+- `HEAD /ImageObject/ca29845ff732289185379d697b8d4b86` Get meta data (might useful for ImageObjects, etc.)
 
 ## Examples
 
