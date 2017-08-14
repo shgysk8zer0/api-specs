@@ -2,29 +2,62 @@
 Specifications for the microdata API (unnamed)
 
 ## Index
-- [Contributing](./docs/CONTRIBUTING.md)
+- [Overview](#overview)
 - [Relevant Resources](#relevant-resources)
 - [Request structure](#request-structure)
 - [Examples](#examples)
 - [Advanced Examples](#advanced-example)
+- [Collections and Lists](#collections-and-lists)
+- [Contributing](./docs/CONTRIBUTING.md)
 
-> This is a non-code repository for describing the structure and functionality
-> of the API, as well as how mapping data to content will take place.
+## Overview
+> Most websites and apps are, at their core, displaying variable content inside
+> of templates. Social networking sites have posts (*perhaps with photos or videos*),
+> which may have some comments. E-commerce sites have products with photos and
+> descriptions, along with reviews. News sites have articles written by authors,
+> again with comments. You might also see information about people, organizations,
+> places and events. Ultimately, the web is full of information about things, with
+> content placed within templates.
+
+> Numerous APIs and templating languages have been created to address this, but
+> developers are then required to learn multiple APIs with different structures
+> and methods, different templating languages, etc. There is no standard. APIs
+> cannot share resources and context. In other words, existing APIs are essentially
+> proprietary and of limited usefulness.
+
+> Google, Microsoft, Yahoo and Yandex founded [schema.org](https://schema.org) in
+> an attempt to provide search engines better understanding of pages through
+> `itemtype` and `itemprop` attributes in HTML, but they also extended JSON into
+> something called JSON-LD, as a pure data representation. Combining this
+> relation between data and `<tempalte>`s (*possibly loaded via `<link rel="import"/>`*),
+> and providing a REST API for managing data would allow developers to create and
+> maintain applications simply by creating templates with the appropriate content
+> and attributes, and filling them in with data obtainable through a simple `GET`
+> request. Creating data can be created through a simple `POST`. Objects/properties
+> directly map from `<input>`s, to database fields, to properties of an AJAX request,
+> to templates in HTML (*and are well documented*).
+
+> This would, not only make creating apps much easier, but it would also
+> allow for creating complex content that is very descriptive and also defines
+> the relation between different representations of data.
+
+**This is a non-code repository for describing the structure and functionality
+of the API, as well as how mapping data to content will take place.**
 
 ## Relevant Resources
 - [Schema.org](https://schema.org)
 - [`<template>`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/template)
-- [Full vocabulary list](https://schema.org/docs/full.html)
+- [Full schema list](https://schema.org/docs/full.html)
+- [HTML Imports](https://www.html5rocks.com/en/tutorials/webcomponents/imports/)
 
 ## Request Structure
 Uses typical REST methods with endpoints mirroring vocabulary and schema defined
 on [schema.org](https://schema.org/docs/full.html)
 
 - `GET /Person/dc67d265e8b544b62f8fea85083fde45` Get an individual entry
-- **CONSIDERING** `GET /Person/Chris%20Zuber` Get an entry by name (*might not be unique*)
 - `GET /Person/dc67d265e8b544b62f8fea85083fde45?fields=givenName,familyName`
 Restrict response data
-- `GET /Person/?lastName=Smith&limit=15&offset=16` Get a list of 15 entries with the last
+- `GET /Person/?familyName=Smith&limit=15&offset=16` Get a list of 15 entries with the last
 name, "Smith", starting with the 16th entry (for pagination)
 - `POST /Person/` Create a new entry. Responds with hash id
 (requires form data or JSON)
@@ -50,7 +83,7 @@ name, "Smith", starting with the 16th entry (for pagination)
 ```html
 <script src="//cdn.domain.tld/js/schema.js"></script>
 <!--
-    `data-import` specifies both a data source, as well as a templte to use for
+    `data-import` specifies both a data source, as well as a template to use for
     the returned data through use of the URL's hash.
 
     Note that the URL structure of the REST API mimics that of schema.org's definitions.
@@ -65,7 +98,7 @@ name, "Smith", starting with the 16th entry (for pagination)
 </person>
 ```
 
-- HTML using `<link rel="import">`
+- HTML using [`<link rel="import">`](https://www.html5rocks.com/en/tutorials/webcomponents/imports/)
 ```html
 <script src="//cdn.domain.tld/js/schema.js"></script>
 <!-- Loads template as seen in above example -->
@@ -90,8 +123,13 @@ name, "Smith", starting with the 16th entry (for pagination)
     "@type": "Article",
     "@context": "http://schema.org",
     "headline": "Lorem Ipsum",
-    "articleSection": [],
+    "description": "...",
+    "keywords": "a, b, ...",
+    "articleBody": "Laboriosam in molestiae consequatur maxime.",
+    "wordCount": 1378,
+    "dateCreated": "2017-08-12T14:32:01",
     "thumbnailUrl": "https://cdn.domain.tld/img/ipsum.jpg",
+    "license": "http://creativecommons.org/licenses/by-sa/4.0/",
     "author": {
         "@type": "Person",
         "givenName": "John",
@@ -103,7 +141,22 @@ name, "Smith", starting with the 16th entry (for pagination)
             "height": 128
         }
     },
-    "comment": [{}]
+    "publisher": {
+        "@type": "Organization",
+        "name": "ACME Inc.",
+        "address": {},
+        "logo": {},
+        "url": "http://www.acme.org"
+    },
+    "commentCount": 1,
+    "comment": [{
+        "@type": "Comment",
+        "upvoteCount": 7,
+        "downcoteCount": 3,
+        "author": {},
+        "dateCreated": "2017-08-14T16:04:00",
+        "text": "..."
+    }]
 }
 ```
 
@@ -125,7 +178,7 @@ name, "Smith", starting with the 16th entry (for pagination)
         <meta itemprop="wordCount" content="" />
         <header>
             <h1 itemprop="headline"></h1>
-            By <div itemprop="author" itemtype="http://schema.org/Person" data-tempalte="#author-tempalte"></div>
+            By <div itemprop="author" itemtype="http://schema.org/Person" data-template="#author-template"></div>
             on <time datetime="" itemprop="datePublished" data-date-format="Y-m-d"></time>
         </header>
         <!-- Will be cloned for each section of article -->
@@ -153,4 +206,49 @@ name, "Smith", starting with the 16th entry (for pagination)
         <blockquote itemprop="text"></blockquote>
     </div>
 </template>
+```
+
+## Collections and Lists
+
+Any `GET` request to a resouce type [`GET /{Thing}`] without an identifier **MUST**
+return an [`ItemList`](https://schema.org/ItemList) containing an array of
+[`ListItem`s](https://schema.org/ListItem). Pagination is strongly encouraged.
+
+### Requests
+
+- `GET /{:Thing}[?[{(name|id|...)=:query}+][&limit=:limit][&offset=:offset]]`
+- `GET /SoftwareApplication`
+- `GET /Person?givenName=Smith&limit=10&offset=20`
+
+### Example Response
+
+```json
+{
+    "@type": "ItemList",
+    "@context": "http://schema.org",
+    "numberOfItems": 2,
+    "itemListOrder": "Ascending",
+    "itemListElement": [
+        {
+            "@type": "ListItem",
+            "item": {
+                "@type": "Thing",
+                "name": "Thing 1",
+                "url": "https://api.domain.tld/Thing/?item=1"
+            },
+            "position": 1,
+            "nextItem": "https://api.domain.tld/Thing/?item=2"
+        },
+        {
+            "@type": "ListItem",
+            "item": {
+                "@type": "Thing",
+                "name": "Thing 2",
+                "url": "https://api.domain.tld/Thing/?item=2"
+            },
+            "position": 2,
+            "previousItem": "https://api.domain.tld/Thing/?item=1"
+        }
+    ]
+}
 ```
