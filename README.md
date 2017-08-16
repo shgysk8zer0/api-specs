@@ -7,6 +7,7 @@ Specifications for the microdata API (unnamed)
 - [Request structure](#request-structure)
 - [Examples](#examples)
 - [Advanced Examples](#advanced-example)
+- [Submitting Complex Objects](#submitting-complex-objects)
 - [Collections and Lists](#collections-and-lists)
 - [Contributing](./docs/CONTRIBUTING.md)
 
@@ -206,6 +207,48 @@ name, "Smith", starting with the 16th entry (for pagination)
         <blockquote itemprop="text"></blockquote>
     </div>
 </template>
+```
+
+## Submitting Complex Objects
+
+Submitting data will typically involve properties which are, themselves, objects.
+It is also likely that a particular property may have multiple valid types that
+it would accept (i.e. [Person](https://schema.org/Person)/homeLocation).
+
+For this reason, structuring forms such that the data they submit is similar in
+structure to the JSON-LD representaion is necessary.
+
+```html
+<form action="/Person" method="POST">
+    <fieldset>
+        <legend>Name</legend>
+        <!-- Typical, simple data width @type & @context as hidden inputs -->
+        <input type="hidden" name="@type" value="Person" />
+        <input type="hidden" name="@context" value="http://schema.org" />
+        <input type="text" name="givenName" required />
+        <input type="text" name="familyName" />
+    </fieldset>
+    <fieldset>
+        <legend>Home Address</legend>
+        <input type="hidden" name="address[@type]" value="PostalAddress" />
+        <input type="text" name="address[streetAddress]" />
+        <!-- ... Address Data ... -->
+    </fieldset>
+    <!-- Multiple values -->
+    <input type="url" name="sameAs[]" placeholder="Twitter URL" />
+    <br />
+    <input type="url" name="sameAs[]" placeholder="GitHub profile URL" />
+    <!-- Multiple values of varying types -->
+    <input type="url" name="image[]" placeholder="Gravatar URL" />
+    <fieldset>
+        <!-- Need to determine handling of uploads, but good example -->
+        <input type="hidden" name="image[][@type]" value="ImageObject" />
+        <input type="file" name="image[][$file?]" />
+        <textarea name="image[][caption]"></textarea>
+        <!-- ... -->
+    </fieldset>
+    <button type="submit">Submit</button>
+</form>
 ```
 
 ## Collections and Lists
